@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SwingIQ">
+<meta name="theme-color" content="#080b0d">
+<title>SwingIQ — Fred's Bag</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080b0d;
+  --s1: #0f1417;
+  --s2: #161c20;
+  --s3: #1e252a;
+  --border: #252e34;
+  --lime: #b8f04a;
+  --teal: #4af0c8;
+  --orange: #f07a3a;
+  --text: #dde8dd;
+  --muted: #556055;
+  --good: #4adf8a;
+  --warn: #f0c040;
+  --bad: #f04a4a;
+  --safe: env(safe-area-inset-bottom, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:'JetBrains Mono', monospace; overflow-x:hidden; }
+
+/* ── HEADER ── */
+.app-header {
+  padding: 52px 20px 20px;
+  background: linear-gradient(180deg, #0f1417 0%, transparent 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+.app-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1;
+}
+.app-header h1 span { color: var(--lime); }
+.hcp-badge {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--lime);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── TAB SCROLL ── */
+.tab-scroll-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+.tab-scroll {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+}
+.tab-scroll::-webkit-scrollbar { display: none; }
+
+.club-tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 13px 16px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color 0.15s;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+.club-tab:hover { color: var(--text); }
+.club-tab.active { color: var(--lime); border-bottom-color: var(--lime); }
+
+/* ── PANEL ── */
+.panel { display: none; padding: 24px 20px calc(40px + var(--safe)); }
+.panel.active { display: block; }
+
+/* ── CLUB HERO ── */
+.club-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.club-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--lime);
+  flex-shrink: 0;
+}
+.club-hero-info h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.club-hero-info .sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.club-status {
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.status-data { background: rgba(184,240,74,0.12); color: var(--lime); border: 1px solid rgba(184,240,74,0.25); }
+.status-empty { background: var(--s2); color: var(--muted); border: 1px solid var(--border); }
+
+/* ── METRIC CARDS ── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+}
+@media (max-width: 480px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
+
+.metric-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: var(--card-top, var(--lime));
+  opacity: 0.5;
+}
+.m-label {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.m-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--card-color, var(--lime));
+}
+.m-unit { font-size: 11px; font-weight: 400; color: var(--muted); }
+.m-sub {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+.m-bar-wrap { margin-top: 10px; }
+.m-bar-labels { display: flex; justify-content: space-between; font-size: 8px; color: var(--muted); margin-bottom: 4px; }
+.m-bar { height: 3px; background: var(--s3); border-radius: 2px; overflow: hidden; }
+.m-bar-fill { height: 100%; border-radius: 2px; }
+
+/* ── SECTION TITLE ── */
+.sec-title {
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── BENCHMARK TABLE ── */
+.bench-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 11px; }
+.bench-table th {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+.bench-table th:first-child { text-align: left; }
+.bench-table td {
+  padding: 10px 10px;
+  text-align: right;
+  border-bottom: 1px solid rgba(37,46,52,0.5);
+  font-size: 11px;
+  color: var(--muted);
+}
+.bench-table td:first-child { text-align: left; font-size: 10px; }
+.bench-table tr.you-row td { color: var(--lime); font-weight: 500; background: rgba(184,240,74,0.04); }
+.bench-table tr.target-row td { color: var(--teal); }
+.bench-table tr:last-child td { border-bottom: none; }
+
+/* ── HISTORY TABLE ── */
+.hist-scroll { overflow-x: auto; margin-bottom: 24px; }
+.hist-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.hist-table th {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  white-space: nowrap;
+}
+.hist-table td {
+  padding: 11px 12px;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(37,46,52,0.4);
+  white-space: nowrap;
+}
+.hist-table tr.latest td { color: var(--lime); }
+.hist-table tr:hover td { background: rgba(184,240,74,0.02); }
+
+/* ── SMASH GRADE ── */
+.sg { display:inline-block; padding:2px 7px; border-radius:3px; font-size:9px; font-weight:500; }
+.sg-a { background:rgba(74,223,138,0.12); color:var(--good); }
+.sg-b { background:rgba(184,240,74,0.12); color:var(--lime); }
+.sg-c { background:rgba(240,192,64,0.12); color:var(--warn); }
+
+/* ── INSIGHT BOX ── */
+.insight {
+  background: rgba(184,240,74,0.04);
+  border: 1px solid rgba(184,240,74,0.15);
+  border-left: 3px solid var(--lime);
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 11px;
+  line-height: 1.75;
+  color: #aabcaa;
+  margin-bottom: 24px;
+}
+.insight strong { color: var(--lime); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  background: var(--s1);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+}
+.empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.empty-state p { font-size: 10px; color: var(--muted); line-height: 1.8; max-width: 280px; margin: 0 auto; }
+.empty-state p strong { color: var(--lime); }
+
+/* ── DELTA COLORS ── */
+.dg { color: var(--good); }
+.dw { color: var(--warn); }
+.db { color: var(--bad); }
+.dm { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Swing<span>IQ</span></h1>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:0.06em;">Fred's Full Bag · Feb 2026</div>
+  </div>
+  <div class="hcp-badge">HCP 8.6 → &lt;5</div>
+</div>
+
+<!-- ── TAB BAR ── -->
+<div class="tab-scroll-wrap">
+  <div class="tab-scroll" id="tabBar">
+    <button class="club-tab active" onclick="show('lw',this)">LW</button>
+    <button class="club-tab" onclick="show('sw',this)">SW</button>
+    <button class="club-tab" onclick="show('gw',this)">GW</button>
+    <button class="club-tab" onclick="show('pw',this)">PW</button>
+    <button class="club-tab" onclick="show('i9',this)">9i</button>
+    <button class="club-tab" onclick="show('i8',this)">8i</button>
+    <button class="club-tab" onclick="show('i7',this)">7i</button>
+    <button class="club-tab" onclick="show('i6',this)">6i</button>
+    <button class="club-tab" onclick="show('i5',this)">5i</button>
+    <button class="club-tab" onclick="show('i4',this)">4i</button>
+    <button class="club-tab" onclick="show('h3',this)">3H</button>
+    <button class="club-tab" onclick="show('w3',this)">3W</button>
+    <button class="club-tab" onclick="show('dr',this)">DR</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     LW — LOB WEDGE
+════════════════════════════════════════ -->
+<div class="panel" id="panel-lw">
+  <div class="club-hero">
+    <div class="club-icon">LW</div>
+    <div class="club-hero-info">
+      <h2>Lob Wedge</h2>
+      <div class="sub">~60° · Shortest club · 50–70 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing Lob Wedge shots to populate this page with your speed, carry, and smash factor data.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — Lob Wedge</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>72 mph</td><td>83 mph</td><td>1.15</td><td>90 yds</td></tr>
+      <tr><td>Scratch</td><td>65 mph</td><td>74 mph</td><td>1.14</td><td>78 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>60–65 mph</td><td>68–74 mph</td><td>1.12–1.16</td><td>68–78 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>57–61 mph</td><td>64–70 mph</td><td>1.10–1.14</td><td>62–70 yds</td></tr>
+      <tr><td>15 HCP</td><td>52 mph</td><td>58 mph</td><td>1.10</td><td>55 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SW — SAND WEDGE  (has data)
+════════════════════════════════════════ -->
+<div class="panel" id="panel-sw">
+  <div class="club-hero">
+    <div class="club-icon">SW</div>
+    <div class="club-hero-info">
+      <h2>Sand Wedge</h2>
+      <div class="sub">~56° · 85–100 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-data">Data: Feb 14</span></div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card" style="--card-top:var(--lime);--card-color:var(--lime)">
+      <div class="m-label">Avg Club Speed</div>
+      <div class="m-value">68.2<span class="m-unit"> mph</span></div>
+      <div class="m-sub dm">Clean shots only (3 shanks excl.)</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>15H (58)</span><span>SCR (72)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--teal),var(--lime))"></div></div>
+      </div>
+    </div>
+    <div class="metric-card" style="--card-top:var(--teal);--card-color:var(--teal)">
+      <div class="m-label">Avg Carry</div>
+      <div class="m-value">90.5<span class="m-unit"> yds</span></div>
+      <div class="m-sub dw">Range: 83–110 yds wide</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>15H (75)</span><span>SCR (105)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:51%;background:linear-gradient(90deg,var(--warn),var(--teal))"></div></div>
+      </div>
+    </div>
+    <div class="metric-card" style="--card-top:var(--orange);--card-color:var(--orange)">
+      <div class="m-label">Smash Factor</div>
+      <div class="m-value">1.13</div>
+      <div class="m-sub dm">Normal range for SW</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>Poor (1.05)</span><span>Elite (1.22)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:47%;background:linear-gradient(90deg,var(--warn),var(--orange))"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title">Session History</div>
+  <div class="hist-scroll">
+  <table class="hist-table">
+    <thead><tr><th>Date / Context</th><th>Shots</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Avg Carry</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr class="latest">
+        <td>Feb 14 '26</td><td>13 (10 clean)</td><td>68.2 mph</td><td>77.8 mph</td>
+        <td><span class="sg sg-c">1.13</span></td><td>90.5 yds</td><td class="db">3 shanks ⚠</td>
+      </tr>
+      <tr class="dm"><td colspan="7" style="text-align:center;padding:14px;font-size:10px;letter-spacing:0.08em">— upload older sessions —</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="sec-title">Benchmarks</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>80 mph</td><td>94 mph</td><td>1.17</td><td>110 yds</td></tr>
+      <tr><td>Scratch</td><td>72 mph</td><td>84 mph</td><td>1.17</td><td>100 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>68–72 mph</td><td>78–84 mph</td><td>1.13–1.18</td><td>92–100 yds</td></tr>
+      <tr class="you-row"><td>YOU (Feb 14)</td><td>68.2 mph</td><td>77.8 mph</td><td>1.13</td><td>90.5 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>65–68 mph</td><td>74–78 mph</td><td>1.10–1.14</td><td>85–93 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="insight"><strong>Key finding:</strong> Clean contact numbers sit right at the 5-HCP range already. The scoring threat is the <strong>3 shank shots (23% of attempts)</strong> — one shank inside 100 yds is a near-automatic bogey. Controlled 80% swings before worrying about SW distance gains.</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     GW — GAP WEDGE
+════════════════════════════════════════ -->
+<div class="panel" id="panel-gw">
+  <div class="club-hero">
+    <div class="club-icon">GW</div>
+    <div class="club-hero-info">
+      <h2>Gap Wedge</h2>
+      <div class="sub">~52° · 95–115 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing Gap Wedge shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — Gap Wedge</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>83 mph</td><td>97 mph</td><td>1.17</td><td>120 yds</td></tr>
+      <tr><td>Scratch</td><td>75 mph</td><td>87 mph</td><td>1.16</td><td>108 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>70–75 mph</td><td>81–87 mph</td><td>1.14–1.17</td><td>100–110 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>67–71 mph</td><td>77–82 mph</td><td>1.12–1.15</td><td>93–102 yds</td></tr>
+      <tr><td>15 HCP</td><td>61 mph</td><td>69 mph</td><td>1.13</td><td>82 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PW — PITCHING WEDGE
+════════════════════════════════════════ -->
+<div class="panel" id="panel-pw">
+  <div class="club-hero">
+    <div class="club-icon">PW</div>
+    <div class="club-hero-info">
+      <h2>Pitching Wedge</h2>
+      <div class="sub">~46° · 115–135 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing Pitching Wedge shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — Pitching Wedge</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>87 mph</td><td>108 mph</td><td>1.24</td><td>140 yds</td></tr>
+      <tr><td>Scratch</td><td>79 mph</td><td>98 mph</td><td>1.24</td><td>126 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>74–79 mph</td><td>91–98 mph</td><td>1.22–1.25</td><td>118–128 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>71–75 mph</td><td>87–92 mph</td><td>1.21–1.23</td><td>112–120 yds</td></tr>
+      <tr><td>15 HCP</td><td>65 mph</td><td>79 mph</td><td>1.22</td><td>100 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     9 IRON
+════════════════════════════════════════ -->
+<div class="panel" id="panel-i9">
+  <div class="club-hero">
+    <div class="club-icon">9i</div>
+    <div class="club-hero-info">
+      <h2>9 Iron</h2>
+      <div class="sub">~41° · 125–145 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 9 Iron shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 9 Iron</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>89 mph</td><td>116 mph</td><td>1.30</td><td>155 yds</td></tr>
+      <tr><td>Scratch</td><td>81 mph</td><td>105 mph</td><td>1.30</td><td>140 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>76–81 mph</td><td>99–105 mph</td><td>1.29–1.31</td><td>130–142 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>73–77 mph</td><td>95–100 mph</td><td>1.28–1.30</td><td>124–133 yds</td></tr>
+      <tr><td>15 HCP</td><td>67 mph</td><td>86 mph</td><td>1.28</td><td>112 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     8 IRON
+════════════════════════════════════════ -->
+<div class="panel" id="panel-i8">
+  <div class="club-hero">
+    <div class="club-icon">8i</div>
+    <div class="club-hero-info">
+      <h2>8 Iron</h2>
+      <div class="sub">~37° · 138–158 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 8 Iron shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 8 Iron</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>91 mph</td><td>121 mph</td><td>1.33</td><td>165 yds</td></tr>
+      <tr><td>Scratch</td><td>83 mph</td><td>110 mph</td><td>1.33</td><td>150 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>78–83 mph</td><td>104–110 mph</td><td>1.32–1.34</td><td>141–153 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>75–79 mph</td><td>99–104 mph</td><td>1.31–1.33</td><td>134–143 yds</td></tr>
+      <tr><td>15 HCP</td><td>69 mph</td><td>91 mph</td><td>1.32</td><td>122 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     7 IRON  (has data)
+════════════════════════════════════════ -->
+<div class="panel" id="panel-i7">
+  <div class="club-hero">
+    <div class="club-icon">7i</div>
+    <div class="club-hero-info">
+      <h2>7 Iron</h2>
+      <div class="sub">~34° · 155–175 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-data">Data: Feb 14 (×2)</span></div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card" style="--card-top:var(--lime);--card-color:var(--lime)">
+      <div class="m-label">Club Speed (Island)</div>
+      <div class="m-value">81.9<span class="m-unit"> mph</span></div>
+      <div class="m-sub dg">↑ +3.0 vs standard</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>BOG (65)</span><span>SCR (84)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:89%;background:linear-gradient(90deg,var(--teal),var(--lime))"></div></div>
+      </div>
+    </div>
+    <div class="metric-card" style="--card-top:var(--teal);--card-color:var(--teal)">
+      <div class="m-label">Carry (Island)</div>
+      <div class="m-value">163.9<span class="m-unit"> yds</span></div>
+      <div class="m-sub dg">↑ +5.2 · Near scratch</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>BOG (135)</span><span>SCR (165)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:96%;background:linear-gradient(90deg,var(--lime),var(--teal))"></div></div>
+      </div>
+    </div>
+    <div class="metric-card" style="--card-top:var(--orange);--card-color:var(--orange)">
+      <div class="m-label">Smash Factor</div>
+      <div class="m-value">1.39</div>
+      <div class="m-sub dw">↓ −0.02 vs standard</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>Poor (1.28)</span><span>Elite (1.42)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:79%;background:linear-gradient(90deg,var(--warn),var(--orange))"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title">Session History</div>
+  <div class="hist-scroll">
+  <table class="hist-table">
+    <thead><tr><th>Date / Context</th><th>Shots</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Avg Carry</th><th>F-to-P</th><th>Disp.</th></tr></thead>
+    <tbody>
+      <tr class="latest">
+        <td>Feb 14 '26 <span class="dm" style="font-size:9px">ISLAND</span></td>
+        <td>14</td><td>81.9 mph</td><td>113.5 mph</td>
+        <td><span class="sg sg-b">1.39</span></td>
+        <td>163.9 yds</td><td class="dw">−2.68°</td><td>±6.8 yds</td>
+      </tr>
+      <tr>
+        <td>Feb 14 '26 <span class="dm" style="font-size:9px">STANDARD</span></td>
+        <td>26</td><td>78.9 mph</td><td>110.7 mph</td>
+        <td><span class="sg sg-a">1.40 ★</span></td>
+        <td>158.6 yds</td><td class="dg">−1.44°</td><td>±5.4 yds</td>
+      </tr>
+      <tr class="dm"><td colspan="8" style="text-align:center;padding:14px;font-size:10px;letter-spacing:0.08em">— upload older sessions —</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="sec-title">Benchmarks</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>92 mph</td><td>128 mph</td><td>1.39</td><td>185 yds</td></tr>
+      <tr><td>Scratch</td><td>84 mph</td><td>117 mph</td><td>1.39</td><td>165 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>79–82 mph</td><td>110–114 mph</td><td>1.38–1.40</td><td>155–162 yds</td></tr>
+      <tr class="you-row"><td>YOU (Feb 14 Island)</td><td>81.9 mph</td><td>113.5 mph</td><td>1.39 ✓</td><td>163.9 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>76–79 mph</td><td>106–110 mph</td><td>1.36–1.39</td><td>148–155 yds</td></tr>
+      <tr><td>15 HCP</td><td>70 mph</td><td>95 mph</td><td>1.36</td><td>135 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="insight"><strong>Island Drill:</strong> +3 mph speed and +5.2 yds carry under pressure — your body responds to consequence. The face-to-path widened to −2.68° vs −1.44° standard, meaning the new shoulder move is generating speed but face awareness needs to catch up. <strong>You're already at scratch carry distance on this club.</strong></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     6 IRON
+════════════════════════════════════════ -->
+<div class="panel" id="panel-i6">
+  <div class="club-hero">
+    <div class="club-icon">6i</div>
+    <div class="club-hero-info">
+      <h2>6 Iron</h2>
+      <div class="sub">~30° · 168–188 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 6 Iron shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 6 Iron</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>94 mph</td><td>132 mph</td><td>1.40</td><td>195 yds</td></tr>
+      <tr><td>Scratch</td><td>86 mph</td><td>120 mph</td><td>1.40</td><td>175 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>81–86 mph</td><td>113–120 mph</td><td>1.38–1.40</td><td>163–175 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>78–82 mph</td><td>108–113 mph</td><td>1.37–1.39</td><td>156–165 yds</td></tr>
+      <tr><td>15 HCP</td><td>72 mph</td><td>99 mph</td><td>1.38</td><td>143 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     5 IRON
+════════════════════════════════════════ -->
+<div class="panel" id="panel-i5">
+  <div class="club-hero">
+    <div class="club-icon">5i</div>
+    <div class="club-hero-info">
+      <h2>5 Iron</h2>
+      <div class="sub">~27° · 180–200 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 5 Iron shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 5 Iron</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>96 mph</td><td>136 mph</td><td>1.42</td><td>205 yds</td></tr>
+      <tr><td>Scratch</td><td>88 mph</td><td>124 mph</td><td>1.41</td><td>185 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>83–88 mph</td><td>117–124 mph</td><td>1.39–1.41</td><td>173–185 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>80–84 mph</td><td>112–118 mph</td><td>1.38–1.40</td><td>165–175 yds</td></tr>
+      <tr><td>15 HCP</td><td>74 mph</td><td>103 mph</td><td>1.39</td><td>152 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     4 IRON
+════════════════════════════════════════ -->
+<div class="panel" id="panel-i4">
+  <div class="club-hero">
+    <div class="club-icon">4i</div>
+    <div class="club-hero-info">
+      <h2>4 Iron</h2>
+      <div class="sub">~24° · 192–215 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 4 Iron shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 4 Iron</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>98 mph</td><td>140 mph</td><td>1.43</td><td>215 yds</td></tr>
+      <tr><td>Scratch</td><td>90 mph</td><td>128 mph</td><td>1.42</td><td>195 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>85–90 mph</td><td>120–128 mph</td><td>1.40–1.42</td><td>182–195 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>82–86 mph</td><td>115–121 mph</td><td>1.39–1.41</td><td>174–184 yds</td></tr>
+      <tr><td>15 HCP</td><td>76 mph</td><td>107 mph</td><td>1.41</td><td>160 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     3 HYBRID
+════════════════════════════════════════ -->
+<div class="panel" id="panel-h3">
+  <div class="club-hero">
+    <div class="club-icon">3H</div>
+    <div class="club-hero-info">
+      <h2>3 Hybrid</h2>
+      <div class="sub">~19° · 205–230 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 3 Hybrid shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 3 Hybrid</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>100 mph</td><td>146 mph</td><td>1.46</td><td>230 yds</td></tr>
+      <tr><td>Scratch</td><td>93 mph</td><td>135 mph</td><td>1.45</td><td>210 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>88–93 mph</td><td>127–135 mph</td><td>1.43–1.45</td><td>197–212 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>85–89 mph</td><td>121–127 mph</td><td>1.42–1.44</td><td>188–200 yds</td></tr>
+      <tr><td>15 HCP</td><td>79 mph</td><td>111 mph</td><td>1.41</td><td>173 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     3 WOOD
+════════════════════════════════════════ -->
+<div class="panel" id="panel-w3">
+  <div class="club-hero">
+    <div class="club-icon">3W</div>
+    <div class="club-hero-info">
+      <h2>3 Wood</h2>
+      <div class="sub">~15° · 225–255 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-empty">No Data Yet</span></div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">⛳</div>
+    <h3>No Sessions Yet</h3>
+    <p>Upload a <strong>DrivingRange .xlsx</strong> file containing 3 Wood shots to populate this page.</p>
+  </div>
+  <br>
+  <div class="sec-title">Benchmarks — 3 Wood</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>107 mph</td><td>158 mph</td><td>1.48</td><td>255 yds</td></tr>
+      <tr><td>Scratch</td><td>99 mph</td><td>146 mph</td><td>1.47</td><td>233 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>94–99 mph</td><td>138–146 mph</td><td>1.45–1.47</td><td>218–235 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>90–95 mph</td><td>131–138 mph</td><td>1.44–1.46</td><td>208–222 yds</td></tr>
+      <tr><td>15 HCP</td><td>84 mph</td><td>121 mph</td><td>1.44</td><td>192 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     DRIVER  (has data)
+════════════════════════════════════════ -->
+<div class="panel" id="panel-dr">
+  <div class="club-hero">
+    <div class="club-icon">DR</div>
+    <div class="club-hero-info">
+      <h2>Driver</h2>
+      <div class="sub">~10.5° · Longest club · 220–260 yds</div>
+    </div>
+    <div class="club-status"><span class="status-pill status-data">Data: Feb 14</span></div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card" style="--card-top:var(--lime);--card-color:var(--lime)">
+      <div class="m-label">Avg Club Speed</div>
+      <div class="m-value">102.5<span class="m-unit"> mph</span></div>
+      <div class="m-sub dg">Top of 5-HCP range</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>15H (85)</span><span>Tour (113)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:62%;background:linear-gradient(90deg,var(--teal),var(--lime))"></div></div>
+      </div>
+    </div>
+    <div class="metric-card" style="--card-top:var(--teal);--card-color:var(--teal)">
+      <div class="m-label">Avg Carry</div>
+      <div class="m-value">224<span class="m-unit"> yds</span></div>
+      <div class="m-sub dw">−16 yds vs 5-HCP target</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>15H (185)</span><span>Tour (275)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:43%;background:linear-gradient(90deg,var(--warn),var(--teal))"></div></div>
+      </div>
+    </div>
+    <div class="metric-card" style="--card-top:var(--orange);--card-color:var(--orange)">
+      <div class="m-label">Smash Factor</div>
+      <div class="m-value">1.42</div>
+      <div class="m-sub dg">Excellent on-center contact</div>
+      <div class="m-bar-wrap">
+        <div class="m-bar-labels"><span>Poor (1.35)</span><span>Elite (1.50)</span></div>
+        <div class="m-bar"><div class="m-bar-fill" style="width:47%;background:linear-gradient(90deg,var(--warn),var(--orange))"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title">Session History</div>
+  <div class="hist-scroll">
+  <table class="hist-table">
+    <thead><tr><th>Date</th><th>Shots</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Avg Carry</th><th>Avg Deviation</th></tr></thead>
+    <tbody>
+      <tr class="latest">
+        <td>Feb 14 '26</td><td>8</td><td>102.5 mph</td><td>145.0 mph</td>
+        <td><span class="sg sg-a">1.42 ★</span></td>
+        <td>224 yds</td><td class="db">−19.7 yds left</td>
+      </tr>
+      <tr class="dm"><td colspan="7" style="text-align:center;padding:14px;font-size:10px;letter-spacing:0.08em">— upload older sessions —</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="sec-title">Benchmarks</div>
+  <div class="hist-scroll">
+  <table class="bench-table">
+    <thead><tr><th>Player Tier</th><th>Club Speed</th><th>Ball Speed</th><th>Smash</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>Tour Average</td><td>113 mph</td><td>167 mph</td><td>1.48</td><td>275 yds</td></tr>
+      <tr><td>Scratch</td><td>106 mph</td><td>155 mph</td><td>1.46</td><td>250 yds</td></tr>
+      <tr class="target-row"><td>5 HCP (Target)</td><td>95–105 mph</td><td>140–152 mph</td><td>1.42–1.46</td><td>230–250 yds</td></tr>
+      <tr class="you-row"><td>YOU (Feb 14)</td><td>102.5 mph</td><td>145.0 mph</td><td>1.42 ✓</td><td>224 yds</td></tr>
+      <tr><td>8 HCP (Current)</td><td>93–97 mph</td><td>132–141 mph</td><td>1.40–1.44</td><td>215–230 yds</td></tr>
+      <tr><td>15 HCP</td><td>85 mph</td><td>118 mph</td><td>1.39</td><td>190 yds</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="insight"><strong>Driver finding:</strong> Speed (102.5 mph) is already above the 5-HCP benchmark. Smash factor of 1.42 means contact is not the problem. The −19.7 yd average miss left and −6.67° face-to-path is a <strong>launch condition problem</strong> — fix the face-to-path and you unlock 240+ carry without adding a single mph. Aim significantly right of target until face-to-path improves inside −4°.</div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.club-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  // Scroll tab into view
+  btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Start on 7 iron since it has data
+window.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.club-tab');
+  tabs.forEach(t => {
+    if (t.textContent === '7i') {
+      t.click();
+    }
+  });
+});
+</script>
+</body>
+</html>
